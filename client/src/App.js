@@ -6,20 +6,32 @@ function App() {
   const [title, setTitle] = useState('');
 
   const fetchTasks = async () => {
-    const res = await axios.get('/api/tasks');
-    setTasks(res.data);
+    try {
+      const res = await axios.get('/api/tasks');
+      setTasks(res.data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const addTask = async () => {
     if (!title.trim()) return;
-    await axios.post('/api/tasks', { title });
-    setTitle('');
-    fetchTasks();
+    try {
+      const res = await axios.post('/api/tasks', { title });
+      setTasks([...tasks, res.data]);
+      setTitle('');
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const deleteTask = async (id) => {
-    await axios.delete(`/api/tasks/${id}`);
-    fetchTasks();
+    try {
+      await axios.delete(`/api/tasks/${id}`);
+      setTasks(tasks.filter(task => task._id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {

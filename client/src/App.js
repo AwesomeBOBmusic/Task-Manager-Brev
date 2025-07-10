@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import moment from 'moment';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import TaskUpdate from './taskUpdate';
 
@@ -7,6 +8,7 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState('');
+  const [dueDate, setDueDate] = useState(new Date());
 
   const fetchTasks = async () => {
     try {
@@ -20,10 +22,15 @@ function App() {
   const addTask = async () => {
     if (!title.trim()) return;
     try {
-      const res = await axios.post('/api/tasks', { title }, { priority: 'low' });
+      const res = await axios.post('/api/tasks', {
+        title,
+        priority: priority || 'low',
+        dueDate
+      });
       setTasks([...tasks, res.data]);
       setTitle('');
       setPriority('');
+      setDueDate(new Date());
     } catch (err) {
       console.error(err);
     }
@@ -38,11 +45,15 @@ function App() {
     }
   };
 
-  const updateTask = async (id, updatedTitle, updatedPriority) => {
+  const updateTask = async (id, updatedTitle, updatedPriority, updatedDueDate) => {
     try {
-      const res = await axios.put(`/api/tasks/edit/${id}`, { title: updatedTitle, priority: updatedPriority });
+      const res = await axios.put(`/api/tasks/edit/${id}`, {
+        title: updatedTitle,
+        priority: updatedPriority,
+        dueDate: updatedDueDate
+      });
       const updatedTasks = tasks.map(task =>
-        task._id === id ? { ...task, title: res.data.title, priority: res.data.priority } : task
+        task._id === id ? { ...task, title: res.data.title, priority: res.data.priority, dueDate: res.data.dueDate } : task
       );
       setTasks(updatedTasks);
     } catch (err) {
@@ -79,6 +90,18 @@ function App() {
               </select>
               <br />
               <br />
+              <label>Due Date: </label>
+              <input
+                type="date"
+                value={
+                  dueDate instanceof Date && !isNaN(dueDate)
+                    ? dueDate.toISOString().split('T')[0]
+                    : ''
+                }
+                onChange={(e) => setDueDate(new Date(e.target.value))}
+              />
+              <br />
+              <br />
               <button onClick={addTask}>Add</button>
 
               <ul>
@@ -89,6 +112,9 @@ function App() {
                     <br />
                     <label>Priority: </label>
                     {task.priority}{" "}
+                    <br />
+                    <label>Due Date: </label>
+                    {moment(task.dueDate).format('DD-MM-YYYY')}{" "}
                     <br />
                     <button onClick={() => deleteTask(task._id)}>❌</button>{" "}
                     <a href={`/edit/${task._id}`}>
@@ -119,8 +145,8 @@ function EditTaskPage({ tasks, updateTask }) {
   return (
     <TaskUpdate
       task={task}
-      updateTask={(taskId, newTitle, newPriority) => {
-        updateTask(taskId, newTitle, newPriority);
+      updateTask={(taskId, newTitle, newPriority, newDueDate) => {
+        updateTask(taskId, newTitle, newPriority, newDueDate);
         navigate('/');
       }}
     />

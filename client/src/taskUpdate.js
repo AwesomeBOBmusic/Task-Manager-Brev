@@ -3,6 +3,11 @@ import React, { useState } from 'react';
 const TaskUpdate = ({ task, updateTask }) => {
   const [title, setTitle] = useState(task.title);
   const [priority, setPriority] = useState(task.priority);
+  const [dueDate, setDueDate] = useState(
+    task.dueDate instanceof Date && !isNaN(task.dueDate)
+      ? task.dueDate
+      : new Date(task.dueDate)
+  );
   const [error, setError] = useState(null);
 
   const handleSubmit = (e) => {
@@ -11,7 +16,7 @@ const TaskUpdate = ({ task, updateTask }) => {
       setError('Please enter a title');
       return;
     }
-    updateTask(task._id, title, priority);
+    updateTask(task._id, title, priority, dueDate);
   };
 
   return (
@@ -32,6 +37,18 @@ const TaskUpdate = ({ task, updateTask }) => {
           <option value="medium">Medium</option>
           <option value="high">High</option>
         </select>
+        <br />
+        <br />
+        <label>Due Date: </label>
+        <input
+          type="date"
+          value={
+            dueDate instanceof Date && !isNaN(dueDate)
+              ? dueDate.toISOString().split('T')[0]
+              : ''
+          }
+          onChange={(e) => setDueDate(new Date(e.target.value))}
+        />
         <br />
         <br />
         {error && <p style={{ color: 'red' }}>{error}</p>}

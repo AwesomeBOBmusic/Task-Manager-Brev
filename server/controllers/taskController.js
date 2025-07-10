@@ -32,8 +32,9 @@ exports.updateTask = async (req, res) => {
   const id = req.params.id;
   const updatedTitle = req.body.title;
   const updatedPriority = req.body.priority;
+  const updatedDueDate = req.body.dueDate;
   try {
-    const task = await Task.findByIdAndUpdate(id, { title: updatedTitle, priority: updatedPriority }, { new: true });
+    const task = await Task.findByIdAndUpdate(id, { title: updatedTitle, priority: updatedPriority, dueDate: updatedDueDate }, { new: true });
     res.json(task);
   } catch (err) {
     console.error(err);

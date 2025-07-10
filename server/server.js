@@ -4,6 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const taskRoutes = require('./routes/taskRoutes');
+const tagRoutes = require('./routes/tagRoutes');
 
 const app = express();
 app.use(cors());
@@ -11,6 +12,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/tasks', taskRoutes);
+app.use('/api/tags', tagRoutes);
 
 // Root Test
 app.get('/', (req, res) => {

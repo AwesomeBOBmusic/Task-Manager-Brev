@@ -21,6 +21,15 @@ function App() {
     }
   };
 
+  const fetchTags = async () => {
+    try {
+      const res = await axios.get('/api/tags');
+      setTags(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const addTask = async () => {
     if (!title.trim()) return;
     try {
@@ -34,7 +43,7 @@ function App() {
       setTitle('');
       setPriority('');
       setDueDate(new Date());
-      setTags([...tags, res.data]);
+      setSelectedTag('');
     } catch (err) {
       console.error(err);
     }
@@ -49,16 +58,16 @@ function App() {
     }
   };
 
-  const updateTask = async (id, updatedTitle, updatedPriority, updatedDueDate) => {
+  const updateTask = async (id, updatedTitle, updatedPriority, updatedDueDate, updatedTags) => {
     try {
       const res = await axios.put(`/api/tasks/edit/${id}`, {
         title: updatedTitle,
         priority: updatedPriority,
         dueDate: updatedDueDate,
-        tags: selectedTag ? [selectedTag] : []
+        tags: updatedTags || []
       });
       const updatedTasks = tasks.map(task =>
-        task._id === id ? { ...task, title: res.data.title, priority: res.data.priority, dueDate: res.data.dueDate, tags: res.data.tags } : task
+        task._id === id ? res.data : task
       );
       setTasks(updatedTasks);
     } catch (err) {
@@ -66,8 +75,19 @@ function App() {
     }
   };
 
+  const addTags = async (newTags) => {
+    try {
+      const res = await axios.post('/api/tags/add', { tags: newTags });
+      const cleanTags = res.data.map(tag => tag.toLowerCase());
+      setTags(prev => Array.from(new Set([...prev, ...cleanTags])));
+    } catch (err) {
+      console.error('Failed to add tags:', err);
+    }
+  };
+
   useEffect(() => {
     fetchTasks();
+    fetchTags();
   }, []);
 
   return (
@@ -79,22 +99,23 @@ function App() {
             <div style={{ padding: 20 }}>
               <h1>Task Manager</h1>
               <h3>New task</h3>
+
               <label>Title: </label>
               <input
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="Bob's task"
               />
-              <br />
-              <br />
+              <br /><br />
+
               <label>Priority: </label>
               <select value={priority} onChange={(e) => setPriority(e.target.value)}>
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
               </select>
-              <br />
-              <br />
+              <br /><br />
+
               <label>Due Date: </label>
               <input
                 type="date"
@@ -105,38 +126,32 @@ function App() {
                 }
                 onChange={(e) => setDueDate(new Date(e.target.value))}
               />
-              <br />
-              <br />
+              <br /><br />
+
+              <label>Tag: </label>
               <select value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)}>
-                <option value="">All tags</option>
-                {tags.map((tag) => (
-                  <option key={tag} value={tag}>
-                    {tag}
-                  </option>
+                <option value="">No tag</option>
+                {tags.map(tag => (
+                  <option key={tag} value={tag}>{tag}</option>
                 ))}
               </select>
-              <br />
-              <br />
+              <a href="/add/tags">
+                <button type="button">✏️</button>
+              </a>
+              <br /><br />
+
               <button onClick={addTask}>Add</button>
 
               <ul>
                 {tasks.map(task => (
                   <li key={task._id}>
-                    <label>Title: </label>
-                    {task.title}{" "}
-                    <br />
-                    <label>Priority: </label>
-                    {task.priority}{" "}
-                    <br />
-                    <label>Due Date: </label>
-                    {moment(task.dueDate).format('DD-MM-YYYY')}{" "}
-                    <br />
-                    <label>Tags: </label>
-                    {task.tags.join(', ')}{" "}
-                    <br />
-                    <button onClick={() => deleteTask(task._id)}>❌</button>{" "}
+                    <label>Title: </label>{task.title}<br />
+                    <label>Priority: </label>{task.priority}<br />
+                    <label>Due Date: </label>{moment(task.dueDate).format('DD-MM-YYYY')}<br />
+                    <label>Tags: </label>{(task.tags || []).join(', ')}<br />
+                    <button onClick={() => deleteTask(task._id)}>❌</button>{' '}
                     <a href={`/edit/${task._id}`}>
-                      <button>✏️</button>
+                      <button type="button">✏️</button>
                     </a>
                     <hr />
                   </li>
@@ -146,15 +161,19 @@ function App() {
           }
         />
         <Route
+          path="/add/tags"
+          element={<AddingTagsPage tags={tags} addTags={addTags} />}
+        />
+        <Route
           path="/edit/:id"
-          element={<EditTaskPage tasks={tasks} updateTask={updateTask} />}
+          element={<EditTaskPage tasks={tasks} updateTask={updateTask} tags={tags} />}
         />
       </Routes>
     </Router>
   );
 }
 
-function EditTaskPage({ tasks, updateTask }) {
+function EditTaskPage({ tasks, updateTask, tags }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const task = tasks.find(t => t._id === id);
@@ -164,11 +183,37 @@ function EditTaskPage({ tasks, updateTask }) {
   return (
     <TaskUpdate
       task={task}
+      tags={tags}
       updateTask={(taskId, newTitle, newPriority, newDueDate, newTags) => {
         updateTask(taskId, newTitle, newPriority, newDueDate, newTags);
         navigate('/');
       }}
     />
+  );
+}
+
+function AddingTagsPage({ tags, addTags }) {
+  const navigate = useNavigate();
+  const [newTag, setNewTag] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!newTag.trim()) return;
+    addTags([newTag]);
+    setNewTag('');
+    navigate('/');
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        value={newTag}
+        onChange={(e) => setNewTag(e.target.value)}
+        placeholder="New tag"
+      />
+      <button type="submit">Add Tag</button>
+    </form>
   );
 }
 

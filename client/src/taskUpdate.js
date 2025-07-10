@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const TaskUpdate = ({ task, updateTask }) => {
+const TaskUpdate = ({ task, tags, updateTask }) => {
   const [title, setTitle] = useState(task.title);
   const [priority, setPriority] = useState(task.priority);
   const [dueDate, setDueDate] = useState(
@@ -8,7 +8,6 @@ const TaskUpdate = ({ task, updateTask }) => {
       ? task.dueDate
       : new Date(task.dueDate)
   );
-  const [tags, setTags] = useState(task.tags || []);
   const [selectedTag, setSelectedTag] = useState('');
   const [error, setError] = useState(null);
 
@@ -18,7 +17,8 @@ const TaskUpdate = ({ task, updateTask }) => {
       setError('Please enter a title');
       return;
     }
-    updateTask(task._id, title, priority, dueDate);
+
+    updateTask(task._id, title, priority, dueDate, selectedTag ? [selectedTag] : []);
   };
 
   return (
@@ -53,8 +53,9 @@ const TaskUpdate = ({ task, updateTask }) => {
         />
         <br />
         <br />
+        <label>Tag: </label>
         <select value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)}>
-          <option value="">All tags</option>
+          <option value="">No tag</option>
           {tags.map((tag) => (
             <option key={tag} value={tag}>
               {tag}

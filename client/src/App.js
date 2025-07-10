@@ -6,6 +6,7 @@ import TaskUpdate from './taskUpdate';
 function App() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState('');
+  const [priority, setPriority] = useState('');
 
   const fetchTasks = async () => {
     try {
@@ -19,9 +20,10 @@ function App() {
   const addTask = async () => {
     if (!title.trim()) return;
     try {
-      const res = await axios.post('/api/tasks', { title });
+      const res = await axios.post('/api/tasks', { title } , { priority: 'low' });
       setTasks([...tasks, res.data]);
       setTitle('');
+      setPriority('');
     } catch (err) {
       console.error(err);
     }
@@ -36,17 +38,17 @@ function App() {
     }
   };
 
-  const updateTask = async (id, updatedTitle) => {
-    try {
-      const res = await axios.put(`/api/tasks/edit/${id}`, { title: updatedTitle });
-      const updatedTasks = tasks.map(task =>
-        task._id === id ? { ...task, title: res.data.title } : task
-      );
-      setTasks(updatedTasks);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const updateTask = async (id, updatedTitle, updatedPriority) => {
+  try {
+    const res = await axios.put(`/api/tasks/edit/${id}`, { title: updatedTitle, priority: updatedPriority });
+    const updatedTasks = tasks.map(task =>
+      task._id === id ? { ...task, title: res.data.title, priority: res.data.priority } : task
+    );
+    setTasks(updatedTasks);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   useEffect(() => {
     fetchTasks();
@@ -60,17 +62,34 @@ function App() {
           element={
             <div style={{ padding: 20 }}>
               <h1>Task Manager</h1>
+              <h3>New task</h3>
+              <label>Title: </label>
               <input
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="New task"
+                placeholder="Bob's task"
               />
+              <br />
+              <br />
+              <label>Priority: </label>
+              <input
+                value={priority}
+                onChange={e => setPriority(e.target.value)}
+                placeholder="low, medium, high"
+              />
+              <br />
+              <br />
               <button onClick={addTask}>Add</button>
 
               <ul>
                 {tasks.map(task => (
                   <li key={task._id}>
+                    <label>Title: </label>
                     {task.title}{" "}
+                    <br />
+                    <label>Priority: </label>
+                    {task.priority}{" "}
+                    <br />
                     <button onClick={() => deleteTask(task._id)}>❌</button>{" "}
                     <a href={`/edit/${task._id}`}>
                       <button>✏️</button>
@@ -100,8 +119,8 @@ function EditTaskPage({ tasks, updateTask }) {
   return (
     <TaskUpdate
       task={task}
-      updateTask={(taskId, newTitle) => {
-        updateTask(taskId, newTitle);
+      updateTask={(taskId, newTitle, newPriority) => {
+        updateTask(taskId, newTitle, newPriority);
         navigate('/');
       }}
     />

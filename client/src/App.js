@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import TaskUpdate from './taskUpdate';
 
 function App() {
   const [tasks, setTasks] = useState([]);
@@ -34,29 +36,75 @@ function App() {
     }
   };
 
+  const updateTask = async (id, updatedTitle) => {
+    try {
+      const res = await axios.put(`/api/tasks/edit/${id}`, { title: updatedTitle });
+      const updatedTasks = tasks.map(task =>
+        task._id === id ? { ...task, title: res.data.title } : task
+      );
+      setTasks(updatedTasks);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchTasks();
   }, []);
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Task Manager</h1>
-      <input
-        value={title}
-        onChange={e => setTitle(e.target.value)}
-        placeholder="New task"
-      />
-      <button onClick={addTask}>Add</button>
+    <Router>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <div style={{ padding: 20 }}>
+              <h1>Task Manager</h1>
+              <input
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="New task"
+              />
+              <button onClick={addTask}>Add</button>
 
-      <ul>
-        {tasks.map(task => (
-          <li key={task._id}>
-            {task.title}{" "}
-            <button onClick={() => deleteTask(task._id)}>❌</button>
-          </li>
-        ))}
-      </ul>
-    </div>
+              <ul>
+                {tasks.map(task => (
+                  <li key={task._id}>
+                    {task.title}{" "}
+                    <button onClick={() => deleteTask(task._id)}>❌</button>{" "}
+                    <a href={`/edit/${task._id}`}>
+                      <button>✏️</button>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          }
+        />
+        <Route
+          path="/edit/:id"
+          element={<EditTaskPage tasks={tasks} updateTask={updateTask} />}
+        />
+      </Routes>
+    </Router>
+  );
+}
+
+function EditTaskPage({ tasks, updateTask }) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const task = tasks.find(t => t._id === id);
+
+  if (!task) return <div>Task not found</div>;
+
+  return (
+    <TaskUpdate
+      task={task}
+      updateTask={(taskId, newTitle) => {
+        updateTask(taskId, newTitle);
+        navigate('/');
+      }}
+    />
   );
 }
 

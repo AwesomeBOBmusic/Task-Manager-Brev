@@ -29,10 +29,13 @@ exports.deleteTask = async (req, res) => {
 };
 
 exports.updateTask = async (req, res) => {
+  const id = req.params.id;
+  const updatedTitle = req.body.title;
   try {
-    const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const task = await Task.findByIdAndUpdate(id, { title: updatedTitle }, { new: true });
     res.json(task);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error(err);
+    res.status(404).send('Task not found');
   }
 };

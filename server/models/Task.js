@@ -18,6 +18,10 @@ const taskSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
+  tags: {
+    type: [String],
+    default: []
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Task', taskSchema);

@@ -9,6 +9,8 @@ function App() {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState('');
   const [dueDate, setDueDate] = useState(new Date());
+  const [tags, setTags] = useState([]);
+  const [selectedTag, setSelectedTag] = useState('');
 
   const fetchTasks = async () => {
     try {
@@ -25,12 +27,14 @@ function App() {
       const res = await axios.post('/api/tasks', {
         title,
         priority: priority || 'low',
-        dueDate
+        dueDate,
+        tags: selectedTag ? [selectedTag] : []
       });
       setTasks([...tasks, res.data]);
       setTitle('');
       setPriority('');
       setDueDate(new Date());
+      setTags([...tags, res.data]);
     } catch (err) {
       console.error(err);
     }
@@ -50,10 +54,11 @@ function App() {
       const res = await axios.put(`/api/tasks/edit/${id}`, {
         title: updatedTitle,
         priority: updatedPriority,
-        dueDate: updatedDueDate
+        dueDate: updatedDueDate,
+        tags: selectedTag ? [selectedTag] : []
       });
       const updatedTasks = tasks.map(task =>
-        task._id === id ? { ...task, title: res.data.title, priority: res.data.priority, dueDate: res.data.dueDate } : task
+        task._id === id ? { ...task, title: res.data.title, priority: res.data.priority, dueDate: res.data.dueDate, tags: res.data.tags } : task
       );
       setTasks(updatedTasks);
     } catch (err) {
@@ -102,6 +107,16 @@ function App() {
               />
               <br />
               <br />
+              <select value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)}>
+                <option value="">All tags</option>
+                {tags.map((tag) => (
+                  <option key={tag} value={tag}>
+                    {tag}
+                  </option>
+                ))}
+              </select>
+              <br />
+              <br />
               <button onClick={addTask}>Add</button>
 
               <ul>
@@ -116,10 +131,14 @@ function App() {
                     <label>Due Date: </label>
                     {moment(task.dueDate).format('DD-MM-YYYY')}{" "}
                     <br />
+                    <label>Tags: </label>
+                    {task.tags.join(', ')}{" "}
+                    <br />
                     <button onClick={() => deleteTask(task._id)}>❌</button>{" "}
                     <a href={`/edit/${task._id}`}>
                       <button>✏️</button>
                     </a>
+                    <hr />
                   </li>
                 ))}
               </ul>
@@ -145,8 +164,8 @@ function EditTaskPage({ tasks, updateTask }) {
   return (
     <TaskUpdate
       task={task}
-      updateTask={(taskId, newTitle, newPriority, newDueDate) => {
-        updateTask(taskId, newTitle, newPriority, newDueDate);
+      updateTask={(taskId, newTitle, newPriority, newDueDate, newTags) => {
+        updateTask(taskId, newTitle, newPriority, newDueDate, newTags);
         navigate('/');
       }}
     />

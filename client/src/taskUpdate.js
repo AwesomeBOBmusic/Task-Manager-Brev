@@ -8,6 +8,8 @@ const TaskUpdate = ({ task, updateTask }) => {
       ? task.dueDate
       : new Date(task.dueDate)
   );
+  const [tags, setTags] = useState(task.tags || []);
+  const [selectedTag, setSelectedTag] = useState('');
   const [error, setError] = useState(null);
 
   const handleSubmit = (e) => {
@@ -49,6 +51,16 @@ const TaskUpdate = ({ task, updateTask }) => {
           }
           onChange={(e) => setDueDate(new Date(e.target.value))}
         />
+        <br />
+        <br />
+        <select value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)}>
+          <option value="">All tags</option>
+          {tags.map((tag) => (
+            <option key={tag} value={tag}>
+              {tag}
+            </option>
+          ))}
+        </select>
         <br />
         <br />
         {error && <p style={{ color: 'red' }}>{error}</p>}

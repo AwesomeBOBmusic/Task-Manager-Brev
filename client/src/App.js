@@ -20,7 +20,7 @@ function App() {
   const addTask = async () => {
     if (!title.trim()) return;
     try {
-      const res = await axios.post('/api/tasks', { title } , { priority: 'low' });
+      const res = await axios.post('/api/tasks', { title }, { priority: 'low' });
       setTasks([...tasks, res.data]);
       setTitle('');
       setPriority('');
@@ -39,16 +39,16 @@ function App() {
   };
 
   const updateTask = async (id, updatedTitle, updatedPriority) => {
-  try {
-    const res = await axios.put(`/api/tasks/edit/${id}`, { title: updatedTitle, priority: updatedPriority });
-    const updatedTasks = tasks.map(task =>
-      task._id === id ? { ...task, title: res.data.title, priority: res.data.priority } : task
-    );
-    setTasks(updatedTasks);
-  } catch (err) {
-    console.error(err);
-  }
-};
+    try {
+      const res = await axios.put(`/api/tasks/edit/${id}`, { title: updatedTitle, priority: updatedPriority });
+      const updatedTasks = tasks.map(task =>
+        task._id === id ? { ...task, title: res.data.title, priority: res.data.priority } : task
+      );
+      setTasks(updatedTasks);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     fetchTasks();
@@ -72,11 +72,11 @@ function App() {
               <br />
               <br />
               <label>Priority: </label>
-              <input
-                value={priority}
-                onChange={e => setPriority(e.target.value)}
-                placeholder="low, medium, high"
-              />
+              <select value={priority} onChange={(e) => setPriority(e.target.value)}>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
               <br />
               <br />
               <button onClick={addTask}>Add</button>

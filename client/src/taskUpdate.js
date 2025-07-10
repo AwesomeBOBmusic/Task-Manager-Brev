@@ -27,11 +27,11 @@ const TaskUpdate = ({ task, updateTask }) => {
         <br />
         <br />
         <label>Priority: </label>
-        <input
-          type="text"
-          value={priority}
-          onChange={(e) => setPriority(e.target.value)}
-        />
+        <select value={priority} onChange={(e) => setPriority(e.target.value)}>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
         <br />
         <br />
         {error && <p style={{ color: 'red' }}>{error}</p>}

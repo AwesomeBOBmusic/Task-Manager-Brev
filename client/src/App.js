@@ -4,7 +4,6 @@ import moment from 'moment';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import TaskUpdate from './taskUpdate';
 
-
 function App() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState('');
@@ -86,6 +85,20 @@ function App() {
     }
   };
 
+  const updateTag = async (id, updatedType) => {
+    try {
+      const res = await axios.put(`/api/tags/edit/${id}`, {
+        type: updatedType,
+      });
+      const updateTag = tags.map(tags =>
+        tags._id === id ? res.data : tags
+      );
+      setTags(updateTag);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchTasks();
     fetchTags();
@@ -137,7 +150,10 @@ function App() {
                 ))}
               </select>
               <a href="/add/tags">
-                <button type="button">✏️</button>
+                <button type="button">➕</button>{' '}
+              </a>
+              <a href="/edit/tags">
+              <button type="button">✏️</button>
               </a>
               <br /><br />
 

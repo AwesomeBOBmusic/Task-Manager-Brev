@@ -3,6 +3,7 @@ import axios from 'axios';
 import moment from 'moment';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import TaskUpdate from './taskUpdate';
+import TagUpdate from './updateTags';
 
 function App() {
   const [tasks, setTasks] = useState([]);
@@ -12,14 +13,15 @@ function App() {
   const [tags, setTags] = useState([]);
   const [selectedTag, setSelectedTag] = useState('');
 
-  const fetchTasks = async () => {
-    try {
-      const res = await axios.get('/api/tasks');
-      setTasks(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+const fetchTasks = async () => {
+  try {
+    const res = await axios.get('/api/tasks');
+    console.log('Fetched tasks:', res.data); // Add this
+    setTasks(res.data);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const fetchTags = async () => {
     try {
@@ -78,7 +80,7 @@ function App() {
   const addTags = async (newTags) => {
     try {
       const res = await axios.post('/api/tags/add', { tags: newTags });
-      const cleanTags = res.data.map(tag => tag.toLowerCase());
+      const cleanTags = res.data.map(tag => typeof tag === 'object' ? tag.name : tag);
       setTags(prev => Array.from(new Set([...prev, ...cleanTags])));
     } catch (err) {
       console.error('Failed to add tags:', err);
@@ -90,10 +92,10 @@ function App() {
       const res = await axios.put(`/api/tags/edit/${id}`, {
         type: updatedType,
       });
-      const updateTag = tags.map(tags =>
-        tags._id === id ? res.data : tags
+      const updatedTags = tags.map(tag =>
+        tag._id === id ? res.data : tag
       );
-      setTags(updateTag);
+      setTags(updatedTags);
     } catch (err) {
       console.error(err);
     }
@@ -121,7 +123,6 @@ function App() {
                 placeholder="Bob's task"
               />
               <br /><br />
-
               <label>Priority: </label>
               <select value={priority} onChange={(e) => setPriority(e.target.value)}>
                 <option value="low">Low</option>
@@ -153,7 +154,7 @@ function App() {
                 <button type="button">➕</button>{' '}
               </a>
               <a href="/edit/tags">
-              <button type="button">✏️</button>
+                <button type="button">✏️</button>
               </a>
               <br /><br />
 
@@ -165,7 +166,10 @@ function App() {
                     <label>Title: </label>{task.title}<br />
                     <label>Priority: </label>{task.priority}<br />
                     <label>Due Date: </label>{moment(task.dueDate).format('DD-MM-YYYY')}<br />
-                    <label>Tags: </label>{(task.tags || []).join(', ')}<br />
+                    <label>Tags: </label>
+                    {Array.isArray(task.tags) && task.tags.length > 0
+                      ? task.tags.join(', ')
+                      : 'No tags'}
                     <button onClick={() => deleteTask(task._id)}>❌</button>{' '}
                     <a href={`/edit/${task._id}`}>
                       <button type="button">✏️</button>
@@ -184,6 +188,10 @@ function App() {
         <Route
           path="/edit/:id"
           element={<EditTaskPage tasks={tasks} updateTask={updateTask} tags={tags} />}
+        />
+        <Route
+          path="/edit/tag/:id"
+          element={<EditTagPage tags={tags} updateTask={updateTag} />}
         />
       </Routes>
     </Router>
@@ -231,6 +239,25 @@ function AddingTagsPage({ tags, addTags }) {
       />
       <button type="submit">Add Tag</button>
     </form>
+  );
+}
+
+function EditTagPage({ tags, updateTag }) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const tag = tags.find(t => t._id === id);
+
+  if (!tag) return <div>Tag not found</div>;
+
+  return (
+    <TagUpdate
+      tag={tag}
+      updateTag={(tagId, updatedType) => {
+        updateTag(tagId, updatedType);
+        navigate('/');
+      }}
+    />
   );
 }
 

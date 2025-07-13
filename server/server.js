@@ -19,6 +19,11 @@ app.get('/', (req, res) => {
   res.send('Task Manager API is running!');
 });
 
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {

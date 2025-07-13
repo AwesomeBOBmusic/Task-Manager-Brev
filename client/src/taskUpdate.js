@@ -57,7 +57,7 @@ const TaskUpdate = ({ task, tags, updateTask }) => {
         <select value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)}>
           <option value="">No tag</option>
           {tags.map((tag) => (
-            <option key={tag} value={tag}>{tag}</option>
+            <option key={tag._id} value={tag._id}>{tag.name}</option>
           ))}
         </select>
         <br />

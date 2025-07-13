@@ -13,19 +13,20 @@ function App() {
   const [tags, setTags] = useState([]);
   const [selectedTag, setSelectedTag] = useState('');
 
-const fetchTasks = async () => {
-  try {
-    const res = await axios.get('/api/tasks');
-    console.log('Fetched tasks:', res.data); // Add this
-    setTasks(res.data);
-  } catch (err) {
-    console.error(err);
-  }
-};
+  const fetchTasks = async () => {
+    try {
+      const res = await axios.get('/api/tasks');
+      console.log('Fetched tasks:', res.data);
+      setTasks(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchTags = async () => {
     try {
       const res = await axios.get('/api/tags');
+      console.log('Fetched tags:', res.data);
       setTags(res.data);
     } catch (err) {
       console.error(err);
@@ -147,7 +148,7 @@ const fetchTasks = async () => {
               <select value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)}>
                 <option value="">No tag</option>
                 {tags.map(tag => (
-                  <option key={tag} value={tag}>{tag}</option>
+                  <option key={tag._id} value={tag._id}>{tag.name}</option>
                 ))}
               </select>
               <a href="/add/tags">
@@ -167,8 +168,13 @@ const fetchTasks = async () => {
                     <label>Priority: </label>{task.priority}<br />
                     <label>Due Date: </label>{moment(task.dueDate).format('DD-MM-YYYY')}<br />
                     <label>Tags: </label>
-                    {Array.isArray(task.tags) && task.tags.length > 0
-                      ? task.tags.join(', ')
+                    {Array.isArray(task.tags) && tags.length > 0
+                      ? task.tags
+                        .map(tagId => {
+                          const tag = tags.find(t => t._id === tagId);
+                          return tag ? tag.name : '(unknown)';
+                        })
+                        .join(', ')
                       : 'No tags'}
                     <button onClick={() => deleteTask(task._id)}>❌</button>{' '}
                     <a href={`/edit/${task._id}`}>
